@@ -1,0 +1,33 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Data
+data/raw/
+data/processed/
+
+# IDEs
+.vscode/
+.idea/
+
+# Pytest
+.pytest_cache/
+
+# Mypy
+.mypy_cache/
