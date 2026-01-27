@@ -1,6 +1,7 @@
 # This script contains dependencies to preprocess M4 data when loading (load_m4.py)
 
 import pandas as pd
+from typing import Tuple, Union
 
 def drop_na(df: pd.DataFrame, value_col: str = "value") -> pd.DataFrame:
     """Drop rows with NA in the value column."""
@@ -17,4 +18,73 @@ def get_valid_series_ids(
     df_initial = df[df[time_col] < required_days]
     counts = df_initial.groupby(grouping_col)[value_col].count()
     return counts[counts >= required_days].index
+
+def temporal_train_test_split(
+    df: pd.DataFrame,
+    id_col: str = "M4id",
+    time_col: str = "time_idx",
+    value_col: str = "value",
+    test_size: Union[float, int] = 0.2
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Split time series data into train and test sets, preserving temporal order.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Long-format time series dataframe.
+    id_col : str
+        Column identifying each time series.
+    time_col : str
+        Time ordering column.
+    test_size : float or int
+        If float (<1), proportion of observations to use for test.
+        If int (>=1), absolute number of observations per series for test.
+
+    Returns
+    -------
+    train_df, test_df : pd.DataFrame
+    """
+
+    if isinstance(test_size, float):
+        if not (0 < test_size < 1):
+            raise ValueError("test_size as float must be between 0 and 1")
+        mode = "proportion"
+
+    elif isinstance(test_size, int):
+        if test_size < 1:
+            raise ValueError("test_size as int must be >= 1")
+        mode = "absolute"
+
+    else:
+        raise TypeError("test_size must be float (<1) or int (>=1)")
+
+    df_sorted = df.sort_values([id_col, time_col])
+
+    train_parts = []
+    test_parts = []
+
+    for series_id, group in df_sorted.groupby(id_col):
+
+        n_obs = len(group)
+
+        if mode == "proportion":
+            n_test = int(n_obs*test_size)
+
+        elif mode == "absolute":
+            n_test = test_size
+
+        if n_test > n_obs:
+            raise ValueError(
+                f"Test size {n_test} is greater than the number of observations {n_obs}"
+            )
+
+        split_point = n_obs - n_test
+        train_parts.append(group.iloc[:split_point])
+        test_parts.append(group.iloc[split_point:])
+
+    train_df = pd.concat(train_parts)
+    test_df = pd.concat(test_parts)
+
+    return train_df, test_df
 
