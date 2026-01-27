@@ -37,6 +37,8 @@ m4-global-forecasting/
 ├── notebooks/          # Exploratory analysis
 ├── requirements.txt
 └── README.md
+```
+---
 
 ### Demo notebook
 
